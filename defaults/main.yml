@@ -3,6 +3,9 @@
 # Define API url to connect to
 freenas_api_url: "{{ freenas_url + '/api/v1.0' }}"
 
+# Defines whether or not to apply pending updates if any are found
+freenas_apply_updates: false
+
 # Define individual disk configurations to apply
 freenas_disks:
   []
@@ -52,7 +55,7 @@ freenas_disks:
 # Define global network configuration
 freenas_global_config:
   {}
-  # gc_domain: vagrant.local
+  # gc_domain: "{{ freenas_pri_domain }}"
   # gc_hostname: "{{ inventory_hostname_short }}"
   # gc_ipv4gateway:
   # gc_ipv6gateway:
@@ -142,6 +145,9 @@ freenas_password: freenas
 
 # Define web port
 freenas_port: 8080
+
+# Define DNS suffix
+freenas_pri_domain: vagrant.local
 
 # Define url
 freenas_url: "{{ freenas_web_protocol + '://' + freenas_host + ':' + freenas_port|string }}"
@@ -355,6 +361,44 @@ freenas_storage:
   #         disks:
   #           - da4
   #           - da5
+
+# Define system settings
+freenas_system:
+  []
+  # - name: advanced
+  #   config:
+  #     adv_advancedmode: false
+  #     adv_anonstats: true
+  #     adv_autotune: false
+  #     adv_consolemenu: true
+  #     adv_consolemsg: false
+  #     adv_debugkernel: false
+  #     adv_motd: Welcome to FreeNAS
+  #     adv_serialconsole: false
+  #     adv_swapondrive: 2
+  #     adv_traceback: true
+  #     adv_uploadcrash: true
+  # - name: email
+  #   config:
+  #     em_fromemail: "{{ 'root@' + inventory_hostname_short + '.' + freenas_pri_domain }}"
+  #     em_outgoingserver:
+  #     em_pass:
+  #     em_port: 25
+  #     em_security: plain
+  #     em_smtp: false
+  #     em_user:
+  # - name: settings
+  #   config:
+  #     stg_directoryservice:
+  #     stg_guiaddress: 0.0.0.0
+  #     stg_guihttpsport: 443
+  #     stg_guihttpsredirect: true
+  #     stg_guiport: 80
+  #     stg_guiprotocol: http
+  #     stg_guiv6address: "::"
+  #     stg_language: en
+  #     stg_syslogserver:
+  #     stg_timezone: UTC
 
 # Define user
 freenas_user: root

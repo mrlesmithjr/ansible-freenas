@@ -1,0 +1,50 @@
+---
+- name: system | Updating System Settings
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/system/' + item['name'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_system }}"
+  tags:
+    - freenas_system
+
+- name: system | Checking For Pending Updates
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/system/update/check/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_pending_updates
+  delegate_to: localhost
+  tags:
+    - freenas_system
+
+- debug: var=freenas_pending_updates['json']
+  tags:
+    - freenas_system
+
+- name: system | Applying Pending Updates
+  uri:
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/system/update/check/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  when: >
+    freenas_apply_updates and
+    freenas_pending_updates['json'] != []
+  tags:
+    - freenas_system

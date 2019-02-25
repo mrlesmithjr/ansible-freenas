@@ -1,26 +1,30 @@
 ---
 # tasks file for ansible-freenas
+- include_tasks: system.yml
+  tags:
+      - freenas_system
+
 - include_tasks: network.yml
   tags:
-    - freenas_network
+      - freenas_network
 
 - include_tasks: interfaces.yml
   tags:
-    - freenas_interfaces
-    - freenas_network
+      - freenas_interfaces
+      - freenas_network
 
 - include_tasks: storage.yml
   tags:
-    - freenas_storage
+      - freenas_storage
 
 - include_tasks: users.yml
   tags:
-    - freenas_users
+      - freenas_users
 
 - include_tasks: services.yml
   tags:
-    - freenas_services
+      - freenas_services
 
 - include_tasks: sharing.yml
   tags:
-    - freenas_sharing
+      - freenas_sharing
