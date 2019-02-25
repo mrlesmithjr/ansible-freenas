@@ -1,5 +1,6 @@
 {% set freenas_storage_config = dict() %}
-{% set disks = dict() %}
+{% set disks_found = dict() %}
+{% set update_disks = [] %}
 {% set existing_volumes = dict() %}
 {% set existing_datasets = {} %}
 {% set existing_zvols = [] %}
@@ -9,8 +10,18 @@
 {% set update_datasets = [] %}
 {% set delete_datasets = [] %}
 {% set permissions = [] %}
-{% for disk in freenas_disks['json'] %}
-{%   set _ = disks.update({disk['disk_name']: {'info': disk}}) %}
+{% for disk in freenas_disks_found['json'] %}
+{%   set _ = disks_found.update({disk['disk_name']: disk}) %}
+{% endfor %}
+{% for disk in freenas_disks %}
+{%   if disk['name'] in disks_found %}
+{%     set disk_config = {
+  'id': disks_found[disk['name']]['disk_identifier'],
+  'config': disk['config']
+  }
+%}
+{%     set _ = update_disks.append(disk_config) %}
+{%   endif %}
 {% endfor %}
 {% for volume in freenas_volumes['json'] %}
 {%   set _ = existing_volumes.update({volume['name']: {'id': volume['id']}}) %}
@@ -65,7 +76,8 @@
   'create_datasets': create_datasets,
   'update_datasets': update_datasets,
   'delete_datasets': delete_datasets,
-  'permissions': permissions
+  'permissions': permissions,
+  'update_disks': update_disks
   })
 %}
 {{ freenas_storage_config }}

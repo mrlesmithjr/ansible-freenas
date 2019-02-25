@@ -3,6 +3,52 @@
 # Define API url to connect to
 freenas_api_url: "{{ freenas_url + '/api/v1.0' }}"
 
+# Define individual disk configurations to apply
+freenas_disks:
+  []
+  # - name: da0
+  #   config:
+  #     disk_acousticlevel: Disabled
+  #     disk_advpowermgmt: Disabled
+  #     disk_description:
+  #     disk_hddstandby: Always On
+  #     disk_togglesmart: true
+  # - name: da1
+  #   config:
+  #     disk_acousticlevel: Disabled
+  #     disk_advpowermgmt: Disabled
+  #     disk_description:
+  #     disk_hddstandby: Always On
+  #     disk_togglesmart: true
+  # - name: da2
+  #   config:
+  #     disk_acousticlevel: Disabled
+  #     disk_advpowermgmt: Disabled
+  #     disk_description:
+  #     disk_hddstandby: Always On
+  #     disk_togglesmart: true
+  # - name: da3
+  #   config:
+  #     disk_acousticlevel: Disabled
+  #     disk_advpowermgmt: Disabled
+  #     disk_description:
+  #     disk_hddstandby: Always On
+  #     disk_togglesmart: true
+  # - name: da4
+  #   config:
+  #     disk_acousticlevel: Disabled
+  #     disk_advpowermgmt: Disabled
+  #     disk_description:
+  #     disk_hddstandby: Always On
+  #     disk_togglesmart: true
+  # - name: da5
+  #   config:
+  #     disk_acousticlevel: Disabled
+  #     disk_advpowermgmt: Disabled
+  #     disk_description:
+  #     disk_hddstandby: Always On
+  #     disk_togglesmart: true
+
 # Define global network configuration
 freenas_global_config:
   {}

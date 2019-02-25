@@ -13,10 +13,6 @@
   tags:
     - freenas_storage
 
-- debug: var=freenas_disks_found['json']
-  tags:
-    - freenas_storage
-
 # We run first time to collect current state
 - name: storage | Capturing Initial Volumes
   uri:
@@ -70,6 +66,22 @@
     - freenas_storage
 
 - debug: var=freenas_storage_config
+  tags:
+    - freenas_storage
+
+- name: storage | Updating Disk Configurations
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/disk/' + item['id']|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_storage_config['update_disks'] }}"
   tags:
     - freenas_storage
 
