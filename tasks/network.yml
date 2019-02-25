@@ -11,3 +11,5 @@
       url: "{{ freenas_api_url + '/network/globalconfiguration/' }}"
       user: "{{ freenas_user }}"
   delegate_to: localhost
+  tags:
+      - freenas_network

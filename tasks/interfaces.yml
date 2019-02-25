@@ -10,6 +10,9 @@
     user: "{{ freenas_user }}"
   register: captured_network_interfaces
   delegate_to: localhost
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Capturing VLANS
   uri:
@@ -22,6 +25,9 @@
     user: "{{ freenas_user }}"
   register: captured_vlan_interfaces
   delegate_to: localhost
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Capturing LAGGs
   uri:
@@ -34,12 +40,21 @@
     user: "{{ freenas_user }}"
   register: captured_lagg_interfaces
   delegate_to: localhost
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Setting Interfaces Config Fact
   set_fact:
     freenas_interfaces_config: "{{ lookup('template', 'interfaces_config.yaml.j2') }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 # - debug: var=freenas_interfaces_config
+#   tags:
+#     - freenas_interfaces
+#     - freenas_network
 
 - name: interfaces | Creating Interfaces (Non-VLAN, Non-LAGG)
   uri:
@@ -59,6 +74,9 @@
     item['config'] != {} and
     not item['vlan_interface'] and
     not item['lagg_interface']
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Creating VLAN Interfaces
   uri:
@@ -73,6 +91,9 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_interfaces_config['create_vlan_interfaces'] }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Creating LAGG Interfaces
   uri:
@@ -87,6 +108,9 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_interfaces_config['create_lagg_interfaces'] }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 # We need to catpure the network interfaces again after creating new interfaces
 # and vlan interfaces
@@ -101,6 +125,9 @@
     user: "{{ freenas_user }}"
   register: captured_network_interfaces
   delegate_to: localhost
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Capturing LAGGs
   uri:
@@ -113,11 +140,17 @@
     user: "{{ freenas_user }}"
   register: captured_lagg_interfaces
   delegate_to: localhost
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 # Update config after re-capturing the network interfaces
 - name: interfaces | Setting Interfaces Config Fact
   set_fact:
     freenas_interfaces_config: "{{ lookup('template', 'interfaces_config.yaml.j2') }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Updating Interfaces
   uri:
@@ -135,6 +168,9 @@
   when: >
     item['config'] is defined and
     item['config'] != {}
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Updating VLAN Interfaces
   uri:
@@ -149,6 +185,9 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_interfaces_config['update_vlan_interfaces'] }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Deleting VLAN Interfaces
   uri:
@@ -161,6 +200,9 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_interfaces_config['delete_vlan_interfaces'] }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Deleting Interfaces
   uri:
@@ -173,6 +215,9 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_interfaces_config['delete_interfaces'] }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Deleting LAGG Interfaces
   uri:
@@ -185,3 +230,6 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_interfaces_config['delete_lagg_interfaces'] }}"
+  tags:
+    - freenas_interfaces
+    - freenas_network

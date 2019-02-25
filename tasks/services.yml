@@ -1,4 +1,22 @@
 ---
+- name: services | Capturing Services
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/services/services/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_services_discovered
+  delegate_to: localhost
+  tags:
+    - freenas_services
+
+- debug: var=freenas_services_discovered['json']
+  tags:
+    - freenas_services
+
 - name: services | Updating Existing Services
   uri:
     body: "{{ item['config'] }}"
@@ -12,3 +30,5 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_services }}"
+  tags:
+    - freenas_services

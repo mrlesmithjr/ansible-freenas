@@ -8,8 +8,14 @@
     status_code: 200
     url: "{{ freenas_api_url + '/storage/disk/' }}"
     user: "{{ freenas_user }}"
-  register: freenas_disks
+  register: freenas_disks_found
   delegate_to: localhost
+  tags:
+    - freenas_storage
+
+- debug: var=freenas_disks_found['json']
+  tags:
+    - freenas_storage
 
 # We run first time to collect current state
 - name: storage | Capturing Initial Volumes
@@ -23,6 +29,8 @@
     user: "{{ freenas_user }}"
   register: freenas_volumes
   delegate_to: localhost
+  tags:
+    - freenas_storage
 
 # We run first time to collect current state
 - name: storage | Capturing Initial Datasets
@@ -36,6 +44,8 @@
     user: "{{ freenas_user }}"
   register: freenas_datasets
   delegate_to: localhost
+  tags:
+    - freenas_storage
 
 - name: storage | Capturing Initial ZVOLs
   uri:
@@ -49,13 +59,19 @@
   delegate_to: localhost
   register: freenas_zvols
   with_items: "{{ freenas_volumes['json'] }}"
+  tags:
+    - freenas_storage
 
 # We run first time to collect current state
 - name: storage | Setting Initial Fact For Storage Config
   set_fact:
     freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+  tags:
+    - freenas_storage
 
 - debug: var=freenas_storage_config
+  tags:
+    - freenas_storage
 
 - name: storage | Creating Volumes
   uri:
@@ -70,6 +86,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['create_volumes'] }}"
+  tags:
+    - freenas_storage
 
 - name: storage | Deleting Volumes
   uri:
@@ -84,6 +102,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['delete_volumes'] }}"
+  tags:
+    - freenas_storage
 
 # We run second time to collect current state
 - name: storage | Capturing Volumes (After volume creations)
@@ -97,13 +117,19 @@
     user: "{{ freenas_user }}"
   register: freenas_volumes
   delegate_to: localhost
+  tags:
+    - freenas_storage
 
 # We run second time to collect current state
 - name: storage | Updating Fact For Storage Config (After volume creations)
   set_fact:
     freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+  tags:
+    - freenas_storage
 
 - debug: var=freenas_storage_config
+  tags:
+    - freenas_storage
 
 - name: storage | Creating Datasets
   uri:
@@ -118,6 +144,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['create_datasets'] }}"
+  tags:
+    - freenas_storage
 
 # We run second time to collect current state
 - name: storage | Capturing Datasets (After dataset creations)
@@ -131,13 +159,19 @@
     user: "{{ freenas_user }}"
   register: freenas_datasets
   delegate_to: localhost
+  tags:
+    - freenas_storage
 
 # We run third time to collect current state
 - name: storage | Updating Fact For Storage Config (After dataset creations)
   set_fact:
     freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+  tags:
+    - freenas_storage
 
 - debug: var=freenas_storage_config
+  tags:
+    - freenas_storage
 
 - name: storage | Updating Datasets
   uri:
@@ -152,6 +186,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['update_datasets'] }}"
+  tags:
+    - freenas_storage
 
 - name: storage | Deleting Datasets
   uri:
@@ -164,6 +200,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['delete_datasets'] }}"
+  tags:
+    - freenas_storage
 
 - name: storage | Setting Mountpoint Permissions
   uri:
@@ -178,7 +216,9 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['permissions'] }}"
-# # TODO: Create logic to determing if snapshot task already exists
+  tags:
+    - freenas_storage
+# TODO: Create logic to determing if snapshot task already exists
 # - name: storage | Creating Snapshot Tasks
 #   uri:
 #     body: "{{ item[1]['config'] }}"
@@ -198,6 +238,8 @@
 #   when: >
 #     item[1] is defined and
 #     item[1]['state'] == "present"
+#   tags:
+#     - freenas_storage
 
 # - name: storage | Capturing Snapshot Tasks
 #   uri:
@@ -210,8 +252,12 @@
 #     user: "{{ freenas_user }}"
 #   delegate_to: localhost
 #   register: freenas_snapshot_tasks
+#   tags:
+#     - freenas_storage
 
 # - debug: var=freenas_snapshot_tasks['json']
+#   tags:
+#     - freenas_storage
 
 # - name: storage | Capturing Snapshots
 #   uri:
@@ -224,5 +270,9 @@
 #     user: "{{ freenas_user }}"
 #   delegate_to: localhost
 #   register: freenas_snapshots
+#   tags:
+#     - freenas_storage
 
 # - debug: var=freenas_snapshots['json']
+#   tags:
+#     - freenas_storage

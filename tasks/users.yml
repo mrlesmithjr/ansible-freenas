@@ -9,10 +9,14 @@
     user: "{{ freenas_user }}"
   register: data
   delegate_to: localhost
+  tags:
+    - freenas_users
 
 - name: users | Setting Users Config Fact
   set_fact:
     freenas_users_config: "{{ lookup('template', 'users_config.yaml.j2') }}"
+  tags:
+    - freenas_users
 
 - name: users | Creating Users
   uri:
@@ -28,6 +32,8 @@
   delegate_to: localhost
   no_log: true
   with_items: "{{ freenas_users_config['create_users'] }}"
+  tags:
+    - freenas_users
 
 - name: users | Updating Users
   uri:
@@ -43,6 +49,8 @@
   delegate_to: localhost
   no_log: true
   with_items: "{{ freenas_users_config['update_users'] }}"
+  tags:
+    - freenas_users
 
 - name: users | Updating Users Passwords
   uri:
@@ -59,6 +67,8 @@
   delegate_to: localhost
   no_log: true
   with_items: "{{ freenas_users_config['update_users'] }}"
+  tags:
+    - freenas_users
 
 - name: users | Deleting Users
   uri:
@@ -71,3 +81,5 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_users_config['delete_users'] }}"
+  tags:
+    - freenas_users

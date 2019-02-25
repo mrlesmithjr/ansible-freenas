@@ -9,6 +9,8 @@
     user: "{{ freenas_user }}"
   register: freenas_cifs
   delegate_to: localhost
+  tags:
+    - freenas_sharing
 
 - name: sharing | Capturing NFS Sharing
   uri:
@@ -20,10 +22,32 @@
     user: "{{ freenas_user }}"
   register: freenas_nfs
   delegate_to: localhost
+  tags:
+    - freenas_sharing
+
+# Currently does not capture anything
+- name: sharing | Capturing WebDAV Sharing
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    url: "{{ freenas_api_url + '/sharing/webdav/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_webdav
+  delegate_to: localhost
+  tags:
+    - freenas_sharing
+
+- debug: var=freenas_webdav
+  tags:
+    - freenas_sharing
 
 - name: sharing | Setting Fact For Sharing Config
   set_fact:
     freenas_sharing_config: "{{ lookup('template', 'sharing_config.yaml.j2') }}"
+  tags:
+    - freenas_sharing
 
 # - debug: var=freenas_sharing_config
 
@@ -45,6 +69,8 @@
     item['type'] != "nfs" and
     item['state'] == "present" and
     freenas_sharing_config[item['type']][item['name']] is not defined
+  tags:
+    - freenas_sharing
 
 - name: Sharing | Updating Shares (Non-NFS)
   uri:
@@ -64,6 +90,8 @@
     item['type'] != "nfs" and
     item['state'] == "present" and
     freenas_sharing_config[item['type']][item['name']] is defined
+  tags:
+    - freenas_sharing
 
 - name: Sharing | Deleting Shares (Non-NFS)
   uri:
@@ -81,6 +109,8 @@
     item['type'] != "nfs" and
     item['state'] == "absent" and
     freenas_sharing_config[item['type']][item['name']] is defined
+  tags:
+    - freenas_sharing
 
 - name: Sharing | Creating Shares (NFS)
   uri:
@@ -95,6 +125,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_sharing_config['nfs']['create_nfs_shares'] }}"
+  tags:
+    - freenas_sharing
 
 - name: Sharing | Updating Shares (NFS)
   uri:
@@ -109,6 +141,8 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_sharing_config['nfs']['update_nfs_shares'] }}"
+  tags:
+    - freenas_sharing
 
 - name: Sharing | Deleting Shares (NFS)
   uri:
@@ -121,3 +155,5 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_sharing_config['nfs']['delete_nfs_shares'] }}"
+  tags:
+    - freenas_sharing
