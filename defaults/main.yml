@@ -275,6 +275,11 @@ freenas_storage:
   #     #   mp_mode: 755
   #     #   mp_user: root
   #     #   mp_group: wheel
+  #     # - mp_path: /mnt/test1/testds
+  #     #   mp_acl: unix
+  #     #   mp_mode: 777
+  #     #   mp_user: nobody
+  #     #   mp_group: nogroup
   #   # These do not work when task_byweekday is more than one day
   #   snapshot_tasks:
   #     []

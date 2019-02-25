@@ -1,24 +1,71 @@
 {% set freenas_storage_config = dict() %}
-{% set volumes = dict() %}
+{% set disks = dict() %}
+{% set existing_volumes = dict() %}
+{% set existing_datasets = {} %}
+{% set existing_zvols = [] %}
+{% set create_volumes = [] %}
+{% set delete_volumes = [] %}
+{% set create_datasets = [] %}
+{% set update_datasets = [] %}
+{% set delete_datasets = [] %}
+{% set permissions = [] %}
+{% for disk in freenas_disks['json'] %}
+{%   set _ = disks.update({disk['disk_name']: {'info': disk}}) %}
+{% endfor %}
 {% for volume in freenas_volumes['json'] %}
-{%   set datasets = [] %}
-{%   for dataset in freenas_datasets['json'] %}
-{%     if dataset['pool'] == volume['name'] %}
-{%       set _ = datasets.append(dataset['name']) %}
-{%     endif %}
+{%   set _ = existing_volumes.update({volume['name']: {'id': volume['id']}}) %}
+{% endfor %}
+{% for dataset in freenas_datasets['json'] %}
+{%   set _ = existing_datasets.update({dataset['name']: {'info': dataset}}) %}
+{% endfor %}
+{% if freenas_zvols['json'] is defined %}
+{%   for zvol in freenas_zvols['json'] %}
+{%     set _ = existing_zvols.append(zvol) %}
 {%   endfor %}
-{%   set _ = volumes.update(
-  {
-  volume['name']: {
-    'datasets': datasets,
-    'id': volume['id']
+{% endif %}
+{% for storage in freenas_storage %}
+{%   if storage['name'] not in existing_volumes and storage['state'] == 'present' %}
+{%     set _ = create_volumes.append(storage['volume_config']) %}
+{%   elif storage['name'] in existing_volumes and storage['state'] == 'absent' %}
+{%     set volume_info = {
+  'id': existing_volumes[storage['name']]['id'],
+  'config': {
+    'destroy': true,
+    'cascade': true
     }
+  }
+%}
+{%     set _ = delete_volumes.append(volume_info) %}
+{%   endif %}
+{%   if storage['state'] == 'present' %}
+{%     for dataset in storage['datasets'] %}
+{%       if (storage['name'] + '/' + dataset['name']) not in existing_datasets and dataset['state'] == 'present' %}
+{%         set dataset_config = {'pool': storage['name'], 'name': dataset['name'], 'config': dataset['dataset_config']} %}
+{%         set _ = create_datasets.append(dataset_config) %}
+{%       elif (storage['name'] + '/' + dataset['name']) in existing_datasets and dataset['state'] == 'present' %}
+{%         set dataset_config = {'pool': storage['name'], 'name': dataset['name'], 'config': dataset['dataset_config']} %}
+{%         set _ = update_datasets.append(dataset_config) %}
+{%       elif (storage['name'] + '/' + dataset['name']) in existing_datasets and dataset['state'] == 'absent' %}
+{%         set dataset_config = {'pool': storage['name'], 'name': dataset['name']} %}
+{%         set _ = delete_datasets.append(dataset_config) %}
+{%       endif %}
+{%     endfor %}
+{%     if storage['permissions'] is defined %}
+{%       for permission in storage['permissions'] %}
+{%         set _ = permissions.append(permission) %}
+{%       endfor %}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+{% set _ = freenas_storage_config.update(
+  {
+  'existing_zvols': existing_zvols,
+  'create_volumes': create_volumes,
+  'delete_volumes': delete_volumes,
+  'create_datasets': create_datasets,
+  'update_datasets': update_datasets,
+  'delete_datasets': delete_datasets,
+  'permissions': permissions
   })
 %}
-{% endfor %}
-{% set disks = [] %}
-{% for disk in freenas_disks['json'] %}
-{%   set _ = disks.append(disk['disk_name']) %}
-{% endfor %}
-{% set _ = freenas_storage_config.update({'disks': disks,'volumes': volumes}) %}
 {{ freenas_storage_config }}
