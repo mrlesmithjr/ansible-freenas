@@ -1,0 +1,246 @@
+---
+- name: storage | Capturing Disks
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/disk/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_disks
+  delegate_to: localhost
+
+# We run first time to collect current state
+- name: storage | Capturing Volumes
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/volume/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_volumes
+  delegate_to: localhost
+
+# We run first time to collect current state
+- name: storage | Capturing Datasets
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/dataset/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_datasets
+  delegate_to: localhost
+
+- name: storage | Capturing ZVOLs
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/volume/' + item['id']|string + '/zvols/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_zvols
+  with_items: "{{ freenas_volumes['json'] }}"
+
+# - debug: var=freenas_zvols['results'][0]['json']
+
+- name: storage | Capturing Snapshot Tasks
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/task/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_snapshot_tasks
+
+# - debug: var=freenas_snapshot_tasks['json']
+
+- name: storage | Capturing Snapshots
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/snapshot/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_snapshots
+
+# - debug: var=freenas_snapshots['json']
+
+# We run first time to collect current state
+- name: storage | Setting Fact For Storage Config
+  set_fact:
+    freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+
+# - debug: var=freenas_storage_config
+
+- name: storage | Creating Volumes
+  uri:
+    body: "{{ item['volume_config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/storage/volume/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_volumes_created
+  notify:
+    - discover storage
+  with_items: "{{ freenas_storage }}"
+  when: >
+    item['name'] not in freenas_storage_config['volumes'] and
+    item['state'] == "present"
+
+# - debug: var=freenas_volumes_created
+# We run second time to collect current state
+- name: storage | Capturing Volumes
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/volume/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_volumes
+  delegate_to: localhost
+
+# We run second time to collect current state
+- name: storage | Setting Fact For Storage Config
+  set_fact:
+    freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+
+# - debug: var=freenas_volumes_created['results'][0]['json']
+
+- name: storage | Creating Datasets
+  uri:
+    body: "{{ item[1]['dataset_config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/storage/dataset/' + item[0]['name'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_datasets_created
+  notify:
+    - discover storage
+  with_subelements:
+    - "{{ freenas_storage }}"
+    - datasets
+  when: >
+    freenas_storage_config['volumes'][item[0]['name']] is defined and
+    (item[0]['name'] + '/' + item[1]['name']) not in freenas_storage_config['volumes'][item[0]['name']]['datasets'] and
+    item[1]['state'] == "present"
+
+# We run second time to collect current state
+- name: storage | Capturing Datasets
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/dataset/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_datasets
+  delegate_to: localhost
+
+# We run third time to collect current state
+- name: storage | Setting Fact For Storage Config
+  set_fact:
+    freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+
+- name: storage | Updating Datasets
+  uri:
+    body: "{{ item[1]['dataset_config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/dataset/' + item[0]['name'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_datasets_created
+  with_subelements:
+    - "{{ freenas_storage }}"
+    - datasets
+  when: >
+    (item[0]['name'] + '/' + item[1]['name']) in freenas_storage_config['volumes'][item[0]['name']]['datasets'] and
+    item[1]['state'] == "present"
+
+- name: storage | Deleting Datasets
+  uri:
+    force_basic_auth: true
+    method: DELETE
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 204
+    url: "{{ freenas_api_url + '/storage/dataset/' + item[0]['name'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_datasets_created
+  with_subelements:
+    - "{{ freenas_storage }}"
+    - datasets
+  when: >
+    (item[0]['name'] + '/' + item[1]['name']) in freenas_storage_config['volumes'][item[0]['name']]['datasets'] and
+    item[1]['state'] == "absent"
+
+- name: storage | Setting Mountpoint Permissions
+  uri:
+    body: "{{ item[1] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/storage/permission/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_subelements:
+    - "{{ freenas_storage }}"
+    - permissions
+  when: item[1] is defined
+
+# TODO: Create logic to determing if snapshot task already exists
+- name: storage | Creating Snapshot Tasks
+  uri:
+    body: "{{ item[1]['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/storage/task/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_datasets_created
+  with_subelements:
+    - "{{ freenas_storage }}"
+    - snapshot_tasks
+  when: >
+    item[1] is defined and
+    item[1]['state'] == "present"

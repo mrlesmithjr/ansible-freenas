@@ -1,0 +1,94 @@
+{% set freenas_interfaces_config = dict() %}
+{% set create_interfaces = [] %}
+{% set update_interfaces = [] %}
+{% set delete_interfaces = [] %}
+{% set create_vlan_interfaces = [] %}
+{% set update_vlan_interfaces = [] %}
+{% set delete_vlan_interfaces = [] %}
+{% set create_lagg_interfaces = [] %}
+{% set update_lagg_interfaces = [] %}
+{% set delete_lagg_interfaces = [] %}
+{% set existing_interfaces = dict() %}
+{% set existing_vlan_interfaces = dict() %}
+{% set existing_lagg_interfaces = dict() %}
+{% for int in captured_network_interfaces['json'] %}
+{%   set _ = existing_interfaces.update({int['int_interface']: {'id': int['id']}}) %}
+{% endfor %}
+{% for int in captured_vlan_interfaces['json'] %}
+{%   set _ = existing_vlan_interfaces.update({int['vlan_vint']: {'id': int['id']}}) %}
+{% endfor %}
+{% for int in captured_lagg_interfaces['json'] %}
+{%   set _ = existing_lagg_interfaces.update({int['lagg_interface']: {'id': int['id']}}) %}
+{% endfor %}
+{% for int in freenas_interfaces %}
+{%   if int['int'] in existing_interfaces %}
+{%     if int['state'] == 'present' %}
+{%       set int_config = {'id': existing_interfaces[int['int']]['id'], 'config': int['config']} %}
+{%       set _ = update_interfaces.append(int_config) %}
+{%     else %}
+{%       set _ = delete_interfaces.append(existing_interfaces[int['int']]['id']) %}
+{%     endif %}
+{%   elif int['int'] not in existing_interfaces and int['state'] == 'present' %}
+{%     if int['config'] != {} %}
+{%       set int_config = {'config': int['config']} %}
+{%     else %}
+{%       set int_config = {'config': {'int_interface': int['int'], 'int_name': int['int']}} %}
+{%     endif %}
+{%     for vlan in freenas_vlan_interfaces %}
+{%       if vlan['config']['vlan_vint'] == int['int'] %}
+{%         set _ = int_config.update({'vlan_interface': true}) %}
+{%       endif %}
+{%     endfor %}
+{%     if int_config['vlan_interface'] is not defined %}
+{%       set _ = int_config.update({'vlan_interface': false}) %}
+{%     endif %}
+{%     for lagg in freenas_lagg_interfaces %}
+{%       if lagg['config']['lagg_interface'] == int['int'] or int['int'] in lagg['config']['lagg_interfaces'] %}
+{%         set _ = int_config.update({'lagg_interface': true}) %}
+{%       endif %}
+{%     endfor %}
+{%     if int_config['lagg_interface'] is not defined %}
+{%       set _ = int_config.update({'lagg_interface': false}) %}
+{%     endif %}
+{%     set _ = create_interfaces.append(int_config) %}
+{%   endif %}
+{% endfor %}
+{% for vlan in freenas_vlan_interfaces %}
+{%   if vlan['name'] in existing_vlan_interfaces %}
+{%     if vlan['state'] == 'present' %}
+{%       set vlan_int_config = {'id': existing_vlan_interfaces[vlan['name']]['id'], 'config': vlan['config']} %}
+{%       set _ = update_vlan_interfaces.append(vlan_int_config) %}
+{%     else %}
+{%       set _ = delete_vlan_interfaces.append(existing_vlan_interfaces[vlan['name']]['id']) %}
+{%     endif %}
+{%   elif vlan['name'] not in existing_vlan_interfaces and vlan['state'] == 'present' %}
+{%     set _ = create_vlan_interfaces.append(vlan['config']) %}
+{%   endif %}
+{% endfor %}
+{% for lagg in freenas_lagg_interfaces %}
+{%   if lagg['name'] in existing_lagg_interfaces %}
+{%     if lagg['state'] == 'present' %}
+{%       set lagg_int_config = {'id': existing_lagg_interfaces[lagg['name']]['id'], 'config': lagg['config']} %}
+{%       set _ = update_lagg_interfaces.append(lagg_int_config) %}
+{%     else %}
+{%       set _ = delete_lagg_interfaces.append(existing_lagg_interfaces[lagg['name']]['id']) %}
+{%     endif %}
+{%   elif lagg['name'] not in existing_lagg_interfaces and lagg['state'] == 'present' %}
+{%     set _ = create_lagg_interfaces.append(lagg['config']) %}
+{%   endif %}
+{% endfor %}
+{% set _ = freenas_interfaces_config.update(
+  {
+  'create_interfaces': create_interfaces,
+  'update_interfaces': update_interfaces,
+  'delete_interfaces': delete_interfaces,
+  'create_vlan_interfaces': create_vlan_interfaces,
+  'update_vlan_interfaces': update_vlan_interfaces,
+  'delete_vlan_interfaces': delete_vlan_interfaces,
+  'create_lagg_interfaces': create_lagg_interfaces,
+  'update_lagg_interfaces': update_lagg_interfaces,
+  'delete_lagg_interfaces': delete_lagg_interfaces,
+  'existing_lagg_interfaces': existing_lagg_interfaces
+  })
+%}
+{{ freenas_interfaces_config }}

@@ -1,0 +1,123 @@
+---
+- name: sharing | Capturing CIFS Sharing
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    url: "{{ freenas_api_url + '/sharing/cifs/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_cifs
+  delegate_to: localhost
+
+- name: sharing | Capturing NFS Sharing
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    url: "{{ freenas_api_url + '/sharing/nfs/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_nfs
+  delegate_to: localhost
+
+- name: sharing | Setting Fact For Sharing Config
+  set_fact:
+    freenas_sharing_config: "{{ lookup('template', 'sharing_config.yaml.j2') }}"
+
+# - debug: var=freenas_sharing_config
+
+- name: Sharing | Creating Shares (Non-NFS)
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/sharing/' + item['type'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_sharing }}"
+  when: >
+    item['name'] is defined and
+    item['type'] != "nfs" and
+    item['state'] == "present" and
+    freenas_sharing_config[item['type']][item['name']] is not defined
+
+- name: Sharing | Updating Shares (Non-NFS)
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/sharing/' + item['type'] + '/' + freenas_sharing_config[item['type']][item['name']]['id']|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_sharing }}"
+  when: >
+    item['name'] is defined and
+    item['type'] != "nfs" and
+    item['state'] == "present" and
+    freenas_sharing_config[item['type']][item['name']] is defined
+
+- name: Sharing | Deleting Shares (Non-NFS)
+  uri:
+    force_basic_auth: true
+    method: DELETE
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 204
+    url: "{{ freenas_api_url + '/sharing/' + item['type'] + '/' + freenas_sharing_config[item['type']][item['name']]['id']|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_sharing }}"
+  when: >
+    item['name'] is defined and
+    item['type'] != "nfs" and
+    item['state'] == "absent" and
+    freenas_sharing_config[item['type']][item['name']] is defined
+
+- name: Sharing | Creating Shares (NFS)
+  uri:
+    body: "{{ item }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/sharing/nfs/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_sharing_config['nfs']['create_nfs_shares'] }}"
+
+- name: Sharing | Updating Shares (NFS)
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/sharing/nfs/' + item['id']|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_sharing_config['nfs']['update_nfs_shares'] }}"
+
+- name: Sharing | Deleting Shares (NFS)
+  uri:
+    force_basic_auth: true
+    method: DELETE
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 204
+    url: "{{ freenas_api_url + '/sharing/nfs/' + item|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_sharing_config['nfs']['delete_nfs_shares'] }}"

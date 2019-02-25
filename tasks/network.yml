@@ -1,0 +1,13 @@
+---
+- name: network | Updating Network Global Configuration
+  uri:
+      body: "{{ freenas_global_config }}"
+      body_format: json
+      force_basic_auth: true
+      method: PUT
+      password: "{{ freenas_password }}"
+      return_content: true
+      status_code: 200
+      url: "{{ freenas_api_url + '/network/globalconfiguration/' }}"
+      user: "{{ freenas_user }}"
+  delegate_to: localhost

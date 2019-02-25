@@ -1,0 +1,74 @@
+{% set freenas_sharing_config = dict() %}
+{% set _ = freenas_sharing_config.update({'cifs': dict()}) %}
+{% set _ = freenas_sharing_config.update({'nfs': dict()}) %}
+{% for share in freenas_cifs['json'] %}
+{%   set _ = freenas_sharing_config['cifs'].update(
+  {
+  share['cifs_name']: {
+    'cifs_path': share['cifs_path'],
+    'id': share['id']
+    }
+  })
+%}
+{% endfor %}
+{% set create_nfs_shares = [] %}
+{% set update_nfs_shares = [] %}
+{% set delete_nfs_shares = [] %}
+{% set existing_nfs_paths = [] %}
+{%     for nfs_share in freenas_nfs['json'] %}
+{%       for path in nfs_share['nfs_paths'] %}
+{%         if path not in existing_nfs_paths %}
+{%           set _ = existing_nfs_paths.append(path) %}
+{%         endif %}
+{%       endfor %}
+{%     endfor %}
+{% for share in freenas_sharing %}
+{%   if share['type']|lower == 'nfs' and share['state'] == 'present' %}
+{%     set create_nfs_paths = [] %}
+{%     set update_nfs_paths = [] %}
+{%     for path in share['config']['nfs_paths'] %}
+{%       if path not in existing_nfs_paths %}
+{%         set _ = create_nfs_paths.append(path) %}
+{%       else %}
+{%         set _ = update_nfs_paths.append(path) %}
+{%       endif %}
+{%     endfor %}
+{%     if create_nfs_paths != [] %}
+{%       set nfs_share_config = share['config'] %}
+{%       set _ = create_nfs_shares.append(nfs_share_config) %}
+{%     endif %}
+{%     if update_nfs_paths != [] %}
+{%       set nfs_share_config = {'config': share['config']} %}
+{%       for nfs_share in freenas_nfs['json'] %}
+{%         for path in nfs_share['nfs_paths'] %}
+{%           if path in update_nfs_paths %}
+{%             set _ = nfs_share_config.update({'id': nfs_share['id']}) %}
+{%           endif %}
+{%         endfor %}
+{%       endfor %}
+{%       set _ = update_nfs_shares.append(nfs_share_config) %}
+{%     endif %}
+{%   elif share['type']|lower == 'nfs' and share['state'] == 'absent' %}
+{%     for path in share['config']['nfs_paths'] %}
+{%       if path in existing_nfs_paths %}
+{%         for nfs_share in freenas_nfs['json'] %}
+{%           for delete_path in nfs_share['nfs_paths'] %}
+{%             if delete_path == path %}
+{%               if nfs_share['id'] not in delete_nfs_shares %}
+{%                 set _ = delete_nfs_shares.append(nfs_share['id']) %}
+{%               endif %}
+{%             endif %}
+{%           endfor %}
+{%         endfor %}
+{%       endif %}
+{%     endfor %}
+{%   endif %}
+{% endfor %}
+{% set _ = freenas_sharing_config['nfs'].update(
+  {
+  'create_nfs_shares': create_nfs_shares,
+  'update_nfs_shares': update_nfs_shares,
+  'delete_nfs_shares': delete_nfs_shares
+  })
+%}
+{{ freenas_sharing_config }}

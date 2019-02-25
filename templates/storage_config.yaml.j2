@@ -1,0 +1,24 @@
+{% set freenas_storage_config = dict() %}
+{% set volumes = dict() %}
+{% for volume in freenas_volumes['json'] %}
+{%   set datasets = [] %}
+{%   for dataset in freenas_datasets['json'] %}
+{%     if dataset['pool'] == volume['name'] %}
+{%       set _ = datasets.append(dataset['name']) %}
+{%     endif %}
+{%   endfor %}
+{%   set _ = volumes.update(
+  {
+  volume['name']: {
+    'datasets': datasets,
+    'id': volume['id']
+    }
+  })
+%}
+{% endfor %}
+{% set disks = [] %}
+{% for disk in freenas_disks['json'] %}
+{%   set _ = disks.append(disk['disk_name']) %}
+{% endfor %}
+{% set _ = freenas_storage_config.update({'disks': disks,'volumes': volumes}) %}
+{{ freenas_storage_config }}

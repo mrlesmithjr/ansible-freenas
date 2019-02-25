@@ -1,0 +1,13 @@
+---
+# tasks file for ansible-freenas
+- include_tasks: network.yml
+
+- include_tasks: interfaces.yml
+
+- include_tasks: storage.yml
+
+- include_tasks: users.yml
+
+- include_tasks: services.yml
+
+- include_tasks: sharing.yml

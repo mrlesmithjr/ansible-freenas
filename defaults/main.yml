@@ -1,0 +1,340 @@
+---
+# defaults file for ansible-freenas
+# Define API url to connect to
+freenas_api_url: "{{ freenas_url + '/api/v1.0' }}"
+
+# Define global network configuration
+freenas_global_config:
+  {}
+  # gc_domain: vagrant.local
+  # gc_hostname: "{{ inventory_hostname_short }}"
+  # gc_ipv4gateway:
+  # gc_ipv6gateway:
+  # gc_nameserver1:
+  # gc_nameserver2:
+  # gc_nameserver3:
+  # gc_netwait_enabled: false
+
+# Define host
+freenas_host: "{{ ansible_host }}"
+
+# Define network interfaces including vlan|lagg interfaces to configure IP settings
+freenas_interfaces:
+  []
+  # - int: em0
+  #   config:
+  #     int_dhcp: true
+  #     int_interface: em0
+  #     int_ipv4address:
+  #     int_name: public
+  #     int_v4netmaskbit:
+  #   state: present
+  # - int: em1
+  #   config:
+  #     {}
+  #     # int_dhcp: false
+  #     # int_interface: em1
+  #     # int_ipv4address: 192.168.250.10
+  #     # int_name: private
+  #     # int_v4netmaskbit: 24
+  #   state: present
+  # - int: em2
+  #   config:
+  #     {}
+  #     # int_dhcp: false
+  #     # int_interface: em1
+  #     # int_ipv4address: 192.168.250.20
+  #     # int_name: private
+  #     # int_v4netmaskbit: 24
+  #   state: present
+  # - int: vlan10
+  #   config:
+  #     int_dhcp: false
+  #     int_interface: vlan10
+  #     int_ipv4address: 192.168.250.10
+  #     int_name: private
+  #     int_v4netmaskbit: 24
+  #   state: present
+  # - int: lagg0
+  #   config:
+  #     int_dhcp: false
+  #     int_interface: lagg0
+  #     int_ipv4address: 192.168.250.10
+  #     int_name: private
+  #     int_v4netmaskbit: 24
+  #   state: present
+
+# Define network lagg interfaces to configure for network interfaces
+# To configure and IP address on a lagg interface, add the lagg to
+# freenas_interfaces
+freenas_lagg_interfaces:
+  []
+  # - name: lagg0
+  #   config:
+  #     lagg_interface: lagg0
+  #     lagg_interfaces:
+  #       - em1
+  #       - em2
+  #     lagg_protocol: roundrobin
+  #   state: present
+
+# Define network vlan interfaces to configure for network interfaces
+# To configure an IP address on a vlan interface, add the vlan to
+# freenas_interfaces
+freenas_vlan_interfaces:
+  []
+  # - name: vlan10
+  #   config:
+  #     vlan_description: VLAN 10
+  #     vlan_pint: em1
+  #     vlan_tag: 10
+  #     vlan_vint: vlan10
+  #   state: present
+
+# Define root password
+freenas_password: freenas
+
+# Define web port
+freenas_port: 8080
+
+# Define url
+freenas_url: "{{ freenas_web_protocol + '://' + freenas_host + ':' + freenas_port|string }}"
+
+# Define services
+freenas_services:
+  []
+  # - name: afp
+  #   config:
+  #     afp_srv_connections_limit: 50
+  #     afp_srv_guest_user: nobody
+  #     afp_srv_guest: false
+  #     srv_enable: false
+  # - name: cifs
+  #   config:
+  #     cifs_srv_allow_execute_always: true
+  #     cifs_srv_description: FreeNAS Server
+  #     cifs_srv_domain_logons: false
+  #     cifs_srv_guest: nobody
+  #     cifs_srv_hostlookup: true
+  #     cifs_srv_localmaster: true
+  #     cifs_srv_netbiosname: "{{ inventory_hostname_short }}"
+  #     cifs_srv_nullpw: false
+  #     cifs_srv_obey_pam_restrictions: true
+  #     cifs_srv_timeserver: true
+  #     cifs_srv_unixext: true
+  #     cifs_srv_workgroup: WORKGROUP
+  #     cifs_srv_zeroconf: true
+  #     srv_enable: true
+  # - name: domaincontroller
+  #   config:
+  #     srv_enable: false
+  # - name: dynamicdns
+  #   config:
+  #     srv_enable: false
+  # - name: ftp
+  #   config:
+  #     srv_enable: false
+  # - name: lldp
+  #   config:
+  #     srv_enable: false
+  # - name: netdata
+  #   config:
+  #     srv_enable: false
+  # - name: nfs
+  #   config:
+  #     nfs_srv_16: false
+  #     nfs_srv_allow_nonroot: false
+  #     nfs_srv_servers: 4
+  #     nfs_srv_udp: false
+  #     nfs_srv_v4_krb: false
+  #     nfs_srv_v4: false
+  #     srv_enable: true
+  # - name: rsync
+  #   config:
+  #     srv_enable: false
+  # - name: smartd
+  #   config:
+  #     smart_critical: 0
+  #     smart_difference: 0
+  #     smart_email:
+  #     smart_informational: 0
+  #     smart_interval: 30
+  #     smart_powermode: never
+  #     srv_enable: true
+  # - name: ssh
+  #   config:
+  #     srv_enable: true
+  #     ssh_compression: false
+  #     ssh_passwordauth: true
+  #     ssh_rootlogin: true
+  #     ssh_tcpfwd: false
+  #     ssh_tcpport: 22
+  # - name: tftp
+  #   config:
+  #     srv_enable: false
+  # - name: webdav
+  #   config:
+  #     srv_enable: false
+
+# Define sharing
+freenas_sharing:
+  []
+  # - type: cifs
+  #   name: testds
+  #   config:
+  #     cifs_comment: My Test Share
+  #     cifs_default_permissions: true
+  #     cifs_guestok: false
+  #     cifs_guestonly: true
+  #     cifs_name: testds
+  #     cifs_path: /mnt/test1/testds
+  #     cifs_recyclebin: false
+  #     cifs_ro: false
+  #     cifs_vfsobjects:
+  #       - zfs_space
+  #       - zfsacl
+  #       - streams_xattr
+  #   state: present
+  # - type: nfs
+  #   config:
+  #     nfs_alldirs: false
+  #     nfs_comment: My Test Share
+  #     nfs_mapall_group: nogroup
+  #     nfs_mapall_user: nobody
+  #     nfs_maproot_group:
+  #     nfs_maproot_user:
+  #     nfs_paths:
+  #       - /mnt/test1/testds
+  #     nfs_ro: false
+  #     nfs_security: sys
+  #   state: present
+
+freenas_storage:
+  []
+  # - name: tank
+  #   datasets:
+  #     - name: vagrant
+  #       dataset_config:
+  #         atime: inherit
+  #         comment: Vagrant Home
+  #         dedup: "off"
+  #         name: vagrant
+  #         quota: 0
+  #         reservation: 0
+  #       state: present
+  #   # These do not work when task_byweekday is more than one day
+  #   snapshot_tasks: []
+  #   #   - name: Daily
+  #   #     config:
+  #   #       task_begin: "00:00:00"
+  #   #       task_byweekday: "1,2"
+  #   #       task_enabled: true
+  #   #       task_end: "23:45:00"
+  #   #       task_filesystem: tank
+  #   #       task_interval: 1440
+  #   #       task_recursive: true
+  #   #       task_repeat_unit: weekly
+  #   #       task_ret_count: 1
+  #   #       task_ret_unit: week
+  #   #     state: present
+  #   permissions:
+  #     []
+  #     # - mp_path: /mnt/tank
+  #     #   mp_acl: unix
+  #     #   mp_mode: 755
+  #     #   mp_user: root
+  #     #   mp_group: wheel
+  #     # - mp_path: /mnt/tank/vagrant
+  #     #   mp_acl: unix
+  #     #   mp_mode: 755
+  #     #   mp_user: vagrant
+  #     #   mp_group: vagrant
+  #   state: present
+  #   volume_config:
+  #     mountpoint: /mnt/tank
+  #     volume_name: tank
+  #     layout:
+  #       - vdevtype: stripe
+  #         disks:
+  #           - da1
+  # - name: test1
+  #   datasets:
+  #     - name: testds
+  #       dataset_config:
+  #         atime: inherit
+  #         comment: Test
+  #         dedup: "off"
+  #         name: testds
+  #         quota: 0
+  #         reservation: 0
+  #       state: present
+  #   permissions:
+  #     []
+  #     # - mp_path: /mnt/test1
+  #     #   mp_acl: unix
+  #     #   mp_mode: 755
+  #     #   mp_user: root
+  #     #   mp_group: wheel
+  #   # These do not work when task_byweekday is more than one day
+  #   snapshot_tasks:
+  #     []
+  #     # - name: Daily
+  #     #   config:
+  #     #     task_begin: "00:00:00"
+  #     #     task_byweekday: "1,2"
+  #     #     task_enabled: true
+  #     #     task_end: "23:45:00"
+  #     #     task_filesystem: test1
+  #     #     task_interval: 1440
+  #     #     task_recursive: true
+  #     #     task_repeat_unit: weekly
+  #     #     task_ret_count: 1
+  #     #     task_ret_unit: week
+  #     #   state: present
+  #   state: present
+  #   volume_config:
+  #     mountpoint: /mnt/test1
+  #     volume_name: test1
+  #     layout:
+  #       - vdevtype: mirror
+  #         disks:
+  #           - da2
+  #           - da3
+  #       - vdevtype: mirror
+  #         disks:
+  #           - da4
+  #           - da5
+
+# Define user
+freenas_user: root
+
+# Define users to manage
+freenas_users:
+  []
+  # - name: vagrant
+  #   config:
+  #     bsdusr_username: vagrant
+  #     bsdusr_creategroup: true
+  #     bsdusr_full_name: Vagrant User
+  #     bsdusr_home: /mnt/tank/vagrant
+  #     bsdusr_password: vagrant
+  #     bsdusr_shell: /bin/csh
+  #     bsdusr_sshpubkey: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key"
+  #     bsdusr_sudo: true
+  #     bsdusr_uid: 1001
+  #   state: present
+  # - name: test1
+  #   config:
+  #     bsdusr_username: test1
+  #     bsdusr_creategroup: true
+  #     bsdusr_full_name: Test User
+  #     bsdusr_home: /nonexistent
+  #     bsdusr_password: test1
+  #     bsdusr_shell: /bin/csh
+  #     bsdusr_sshpubkey:
+  #     bsdusr_sudo: false
+  #     bsdusr_uid: 1002
+  #   state: absent
+
+# Define web protocol http(s)
+freenas_web_protocol: http

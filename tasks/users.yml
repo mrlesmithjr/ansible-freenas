@@ -1,0 +1,73 @@
+---
+- name: users | Capturing Existing Users
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    url: "{{ freenas_api_url + '/account/users/' }}"
+    user: "{{ freenas_user }}"
+  register: data
+  delegate_to: localhost
+
+- name: users | Setting Users Config Fact
+  set_fact:
+    freenas_users_config: "{{ lookup('template', 'users_config.yaml.j2') }}"
+
+- name: users | Creating Users
+  uri:
+    body: "{{ item }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/account/users/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  no_log: true
+  with_items: "{{ freenas_users_config['create_users'] }}"
+
+- name: users | Updating Users
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/account/users/' + item['id']|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  no_log: true
+  with_items: "{{ freenas_users_config['update_users'] }}"
+
+- name: users | Updating Users Passwords
+  uri:
+    body:
+      bsdusr_password: "{{ item['config']['bsdusr_password'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/account/users/' + item['id']|string + '/password/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  no_log: true
+  with_items: "{{ freenas_users_config['update_users'] }}"
+
+- name: users | Deleting Users
+  uri:
+    force_basic_auth: true
+    method: DELETE
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 204
+    url: "{{ freenas_api_url + '/account/users/' + item|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_users_config['delete_users'] }}"
