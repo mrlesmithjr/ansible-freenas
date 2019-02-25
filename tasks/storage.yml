@@ -185,6 +185,63 @@
   tags:
     - freenas_storage
 
+- name: storage | Creating ZVOLs
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 202
+    url: "{{ freenas_api_url + '/storage/volume/' + item['pool'] + '/zvols/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_storage_config['create_zvols'] }}"
+  tags:
+    - freenas_storage
+
+# We run third time to collect current state
+- name: storage | Capturing Datasets (After ZVOL creations)
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/dataset/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_datasets
+  delegate_to: localhost
+  tags:
+    - freenas_storage
+
+- name: storage | Capturing ZVOLs (After ZVOL creations)
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/volume/' + item['id']|string + '/zvols/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_zvols
+  with_items: "{{ freenas_volumes['json'] }}"
+  tags:
+    - freenas_storage
+
+# We run fourth time to collect current state
+- name: storage | Updating Fact For Storage Config (After dataset creations)
+  set_fact:
+    freenas_storage_config: "{{ lookup('template', 'storage_config.yaml.j2') }}"
+  tags:
+    - freenas_storage
+
+- debug: var=freenas_storage_config
+  tags:
+    - freenas_storage
+
 - name: storage | Updating Datasets
   uri:
     body: "{{ item['config'] }}"
@@ -201,6 +258,22 @@
   tags:
     - freenas_storage
 
+- name: storage | Updating ZVOLs
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/storage/volume/' + item['pool'] + '/zvols/' + item['name'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_storage_config['update_zvols'] }}"
+  tags:
+    - freenas_storage
+
 - name: storage | Deleting Datasets
   uri:
     force_basic_auth: true
@@ -212,6 +285,20 @@
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['delete_datasets'] }}"
+  tags:
+    - freenas_storage
+
+- name: storage | Deleting ZVOLs
+  uri:
+    force_basic_auth: true
+    method: DELETE
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 204
+    url: "{{ freenas_api_url + '/storage/volume/' + item['pool'] + '/zvols/' + item['name'] + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_storage_config['delete_zvols'] }}"
   tags:
     - freenas_storage
 

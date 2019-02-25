@@ -361,6 +361,15 @@ freenas_storage:
   #         disks:
   #           - da4
   #           - da5
+  #   zvols:
+  #     - name: testzvol
+  #       state: present
+  #       zvol_config:
+  #         blocksize: 4K
+  #         comments: Test ZVOL
+  #         name: testzvol
+  #         sparse: true
+  #         volsize: 2G
 
 # Define system settings
 freenas_system:

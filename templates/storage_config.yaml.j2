@@ -9,6 +9,9 @@
 {% set create_datasets = [] %}
 {% set update_datasets = [] %}
 {% set delete_datasets = [] %}
+{% set create_zvols = [] %}
+{% set update_zvols = [] %}
+{% set delete_zvols = [] %}
 {% set permissions = [] %}
 {% for disk in freenas_disks_found['json'] %}
 {%   set _ = disks_found.update({disk['disk_name']: disk}) %}
@@ -29,11 +32,11 @@
 {% for dataset in freenas_datasets['json'] %}
 {%   set _ = existing_datasets.update({dataset['name']: {'info': dataset}}) %}
 {% endfor %}
-{% if freenas_zvols['json'] is defined %}
-{%   for zvol in freenas_zvols['json'] %}
-{%     set _ = existing_zvols.append(zvol) %}
+{% for result in freenas_zvols['results'] %}
+{%   for zvol in result['json'] %}
+{%     set _ = existing_zvols.append(result['item']['name'] + '/' + zvol['name']) %}
 {%   endfor %}
-{% endif %}
+{% endfor %}
 {% for storage in freenas_storage %}
 {%   if storage['name'] not in existing_volumes and storage['state'] == 'present' %}
 {%     set _ = create_volumes.append(storage['volume_config']) %}
@@ -61,6 +64,20 @@
 {%         set _ = delete_datasets.append(dataset_config) %}
 {%       endif %}
 {%     endfor %}
+{%     if storage['zvols'] is defined %}
+{%       for zvol in storage['zvols'] %}
+{%         if (storage['name'] + '/' + zvol['name']) not in existing_zvols and zvol['state'] == 'present' %}
+{%           set zvol_config = {'pool': storage['name'], 'config': zvol['zvol_config']} %}
+{%           set _ = create_zvols.append(zvol_config) %}
+{%         elif (storage['name'] + '/' + zvol['name']) in existing_zvols and zvol['state'] == 'present' %}
+{%           set zvol_config = {'pool': storage['name'], 'name': zvol['name'], 'config': zvol['zvol_config']} %}
+{%           set _ = update_zvols.append(zvol_config) %}
+{%         elif (storage['name'] + '/' + zvol['name']) in existing_zvols and zvol['state'] == 'absent' %}
+{%           set zvol_config = {'pool': storage['name'], 'name': zvol['name']} %}
+{%           set _ = delete_zvols.append(zvol_config) %}
+{%         endif %}
+{%       endfor %}
+{%     endif %}
 {%     if storage['permissions'] is defined %}
 {%       for permission in storage['permissions'] %}
 {%         set _ = permissions.append(permission) %}
@@ -76,6 +93,9 @@
   'create_datasets': create_datasets,
   'update_datasets': update_datasets,
   'delete_datasets': delete_datasets,
+  'create_zvols': create_zvols,
+  'update_zvols': update_zvols,
+  'delete_zvols': delete_zvols,
   'permissions': permissions,
   'update_disks': update_disks
   })
