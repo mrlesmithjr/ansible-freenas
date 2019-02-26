@@ -64,6 +64,21 @@ freenas_global_config:
   # gc_nameserver3:
   # gc_netwait_enabled: false
 
+freenas_groups:
+  []
+  # - name: vagrant
+  #   config:
+  #     bsdgrp_gid: 1000
+  #     bsdgrp_group: vagrant
+  #     bsdgrp_sudo: false
+  #   state: present
+  # - name: testgroup
+  #   config:
+  #     bsdgrp_gid: 1001
+  #     bsdgrp_group: testgroup
+  #     bsdgrp_sudo: false
+  #   state: present
+
 # Define host
 freenas_host: "{{ ansible_host }}"
 

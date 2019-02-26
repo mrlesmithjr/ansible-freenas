@@ -1,0 +1,69 @@
+---
+- name: groups | Capturing Existing Groups
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    url: "{{ freenas_api_url + '/account/groups/' }}"
+    user: "{{ freenas_user }}"
+  register: freenas_groups_found
+  delegate_to: localhost
+  tags:
+    - freenas_groups
+
+- name: groups | Setting groups Config Fact
+  set_fact:
+    freenas_groups_config: "{{ lookup('template', 'groups_config.yaml.j2') }}"
+  tags:
+    - freenas_groups
+
+- debug: var=freenas_groups_config
+  tags:
+    - freenas_groups
+
+- name: groups | Creating Groups
+  uri:
+    body: "{{ item }}"
+    body_format: json
+    force_basic_auth: true
+    method: POST
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 201
+    url: "{{ freenas_api_url + '/account/groups/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_groups_config['create_groups'] }}"
+  tags:
+    - freenas_groups
+
+- name: groups | Updating Groups
+  uri:
+    body: "{{ item['config'] }}"
+    body_format: json
+    force_basic_auth: true
+    method: PUT
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/account/groups/' + item['id']|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_groups_config['update_groups'] }}"
+  tags:
+    - freenas_groups
+
+- name: groups | Deleting Groups
+  uri:
+    force_basic_auth: true
+    method: DELETE
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 204
+    url: "{{ freenas_api_url + '/account/groups/' + item|string + '/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  with_items: "{{ freenas_groups_config['delete_groups'] }}"
+  tags:
+    - freenas_groups

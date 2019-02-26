@@ -1,0 +1,30 @@
+{% set freenas_groups_config = dict() %}
+{% set existing_groups = dict() %}
+{% set create_groups = [] %}
+{% set update_groups = [] %}
+{% set delete_groups = [] %}
+{% for group in freenas_groups_found['json'] %}
+{%   set _ = existing_groups.update({group['bsdgrp_group']: {'id': group['id'], 'bsdgrp_gid': group['bsdgrp_gid']}}) %}
+{% endfor %}
+{% for group in freenas_groups %}
+{%   if group['name'] not in existing_groups and group['state'] == 'present' %}
+{%     set _ = create_groups.append(group['config']) %}
+{%   elif group['name'] in existing_groups and group['state'] == 'present' %}
+{%     set group_config = {
+  'id': existing_groups[group['name']]['id'],
+  'config': group['config']
+  }
+%}
+{%     set _ = update_groups.append(group_config) %}
+{%   elif group['name'] in existing_groups and group['state'] == 'absent' %}
+{%     set _ = delete_groups.append(existing_groups[group['name']]['id']) %}
+{%   endif %}
+{% endfor %}
+{% set _ = freenas_groups_config.update(
+  {
+  'create_groups': create_groups,
+  'update_groups': update_groups,
+  'delete_groups': delete_groups
+  })
+%}
+{{ freenas_groups_config }}
