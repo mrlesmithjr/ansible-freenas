@@ -3,19 +3,21 @@
 {% set update_users = [] %}
 {% set delete_users = [] %}
 {% set existing_users = dict() %}
-{% for user in data['json'] %}
+{% for user in freenas_users_found['json'] %}
 {%   set _ = existing_users.update({user['bsdusr_username']: {'id': user['id']}}) %}
 {% endfor %}
 {% for user in freenas_users %}
-{%   if user['name'] in existing_users %}
-{%     if user['state'] == 'present' %}
-{%       set user_config = {'id': existing_users[user['name']]['id'], 'config': user['config']} %}
-{%       set _ = update_users.append(user_config) %}
-{%     else %}
-{%       set _ = delete_users.append(existing_users[user['name']]['id']) %}
-{%     endif %}
-{%   elif user['name'] not in existing_users and user['state'] == 'present' %}
+{%   if user['name'] not in existing_users and user['state'] == 'present' %}
 {%     set _ = create_users.append(user['config']) %}
+{%   elif user['name'] in existing_users and user['state'] == 'present' %}
+{%     set user_config = {
+  'id': existing_users[user['name']]['id'],
+  'config': user['config']
+  }
+%}
+{%     set _ = update_users.append(user_config) %}
+{%   elif user['name'] in existing_users and user['state'] == 'absent' %}
+{%       set _ = delete_users.append(existing_users[user['name']]['id']) %}
 {%   endif %}
 {% endfor %}
 {% set _ = freenas_users_config.update(

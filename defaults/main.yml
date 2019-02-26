@@ -453,7 +453,7 @@ freenas_users:
   #     bsdusr_sshpubkey:
   #     bsdusr_sudo: false
   #     bsdusr_uid: 1002
-  #   state: absent
+  #   state: present
 
 # Define web protocol http(s)
 freenas_web_protocol: http

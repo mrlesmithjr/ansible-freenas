@@ -7,7 +7,7 @@
     return_content: true
     url: "{{ freenas_api_url + '/account/users/' }}"
     user: "{{ freenas_user }}"
-  register: data
+  register: freenas_users_found
   delegate_to: localhost
   tags:
     - freenas_users
