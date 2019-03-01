@@ -58,7 +58,7 @@
 {%         set actual_dataset_split = dataset['name'].split('/') %}
 {%         if actual_dataset_split|length > 1 %}
 {%           set actual_dataset_path = pool + '/' + actual_dataset_split[:-1]|join('/') %}
-{%           set actual_dataset = dataset['name'].split('/')[1] %}
+{%           set actual_dataset = dataset['name'].split('/')[-1] %}
 {%         else %}
 {%           set actual_dataset_path = pool %}
 {%           set actual_dataset = dataset['name'] %}
