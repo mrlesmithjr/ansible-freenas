@@ -29,7 +29,9 @@
   tags:
     - freenas_system
 
-- debug: var=freenas_pending_updates['json']
+- name: system | Displaying Pending Updates
+  debug:
+    var: freenas_pending_updates['json']
   tags:
     - freenas_system
 

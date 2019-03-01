@@ -13,7 +13,9 @@
   tags:
     - freenas_services
 
-- debug: var=freenas_services_discovered['json']
+- name: services | Displaying Discovered Services
+  debug:
+    var: freenas_services_discovered['json']
   tags:
     - freenas_services
 

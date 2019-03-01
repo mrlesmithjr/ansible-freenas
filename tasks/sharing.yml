@@ -39,7 +39,9 @@
   tags:
     - freenas_sharing
 
-- debug: var=freenas_webdav
+- name: sharing | Displaying WebDAV Sharing
+  debug:
+    var: freenas_webdav['json']
   tags:
     - freenas_sharing
 
@@ -49,7 +51,9 @@
   tags:
     - freenas_sharing
 
-# - debug: var=freenas_sharing_config
+- name: sharing | Displaying Sharing Config Fact
+  debug:
+    var: freenas_sharing_config
 
 - name: Sharing | Creating Shares (Non-NFS)
   uri:

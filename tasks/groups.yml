@@ -18,7 +18,9 @@
   tags:
     - freenas_groups
 
-- debug: var=freenas_groups_config
+- name: groups | Displaying groups Config Fact
+  debug:
+    var: freenas_groups_config
   tags:
     - freenas_groups
 

@@ -51,10 +51,12 @@
     - freenas_interfaces
     - freenas_network
 
-# - debug: var=freenas_interfaces_config
-#   tags:
-#     - freenas_interfaces
-#     - freenas_network
+- name: interfaces | Displaying Interfaces Config Fact
+  debug:
+    var: freenas_interfaces_config
+  tags:
+    - freenas_interfaces
+    - freenas_network
 
 - name: interfaces | Creating Interfaces (Non-VLAN, Non-LAGG)
   uri:
