@@ -65,7 +65,9 @@
   tags:
     - freenas_storage
 
-- debug: var=freenas_storage_config
+- name: storage | Displaying Storage Config
+  debug:
+    var: freenas_storage_config
   tags:
     - freenas_storage
 
@@ -139,7 +141,9 @@
   tags:
     - freenas_storage
 
-- debug: var=freenas_storage_config
+- name: storage | Displaying Storage Config
+  debug:
+    var: freenas_storage_config
   tags:
     - freenas_storage
 
@@ -152,7 +156,7 @@
     password: "{{ freenas_password }}"
     return_content: true
     status_code: 201
-    url: "{{ freenas_api_url + '/storage/dataset/' + item['pool'] + '/' }}"
+    url: "{{ freenas_api_url + '/storage/dataset/' + item['path'] + '/' }}"
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['create_datasets'] }}"
@@ -181,7 +185,9 @@
   tags:
     - freenas_storage
 
-- debug: var=freenas_storage_config
+- name: storage | Displaying Storage Config
+  debug:
+    var: freenas_storage_config
   tags:
     - freenas_storage
 
@@ -238,7 +244,9 @@
   tags:
     - freenas_storage
 
-- debug: var=freenas_storage_config
+- name: storage | Displaying Storage Config
+  debug:
+    var: freenas_storage_config
   tags:
     - freenas_storage
 
@@ -251,7 +259,7 @@
     password: "{{ freenas_password }}"
     return_content: true
     status_code: 200
-    url: "{{ freenas_api_url + '/storage/dataset/' + item['pool'] + '/' + item['name'] + '/' }}"
+    url: "{{ freenas_api_url + '/storage/dataset/' + item['path'] + '/' + item['dataset_name'] + '/' }}"
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['update_datasets'] }}"
@@ -281,7 +289,7 @@
     password: "{{ freenas_password }}"
     return_content: true
     status_code: 204
-    url: "{{ freenas_api_url + '/storage/dataset/' + item['pool'] + '/' + item['name'] + '/' }}"
+    url: "{{ freenas_api_url + '/storage/dataset/' + item['path'] + '/' + item['dataset_name'] + '/' }}"
     user: "{{ freenas_user }}"
   delegate_to: localhost
   with_items: "{{ freenas_storage_config['delete_datasets'] }}"
@@ -354,24 +362,28 @@
 #   tags:
 #     - freenas_storage
 
-# - debug: var=freenas_snapshot_tasks['json']
+# - name: storage | Displaying Captured Snapshot Tasks
+#   debug:
+#     var: freenas_snapshot_tasks['json']
 #   tags:
 #     - freenas_storage
 
-# - name: storage | Capturing Snapshots
-#   uri:
-#     force_basic_auth: true
-#     method: GET
-#     password: "{{ freenas_password }}"
-#     return_content: true
-#     status_code: 200
-#     url: "{{ freenas_api_url + '/storage/snapshot/' }}"
-#     user: "{{ freenas_user }}"
-#   delegate_to: localhost
-#   register: freenas_snapshots
-#   tags:
-#     - freenas_storage
+- name: storage | Capturing Snapshots
+  uri:
+    force_basic_auth: true
+    method: GET
+    password: "{{ freenas_password }}"
+    return_content: true
+    status_code: 200
+    url: "{{ freenas_api_url + '/storage/snapshot/' }}"
+    user: "{{ freenas_user }}"
+  delegate_to: localhost
+  register: freenas_snapshots
+  tags:
+    - freenas_storage
 
-# - debug: var=freenas_snapshots['json']
-#   tags:
-#     - freenas_storage
+- name: storage | Displaying Captured Snapshots
+  debug:
+    var: freenas_snapshots['json']
+  tags:
+    - freenas_storage
